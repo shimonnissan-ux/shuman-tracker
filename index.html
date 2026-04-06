@@ -31,7 +31,7 @@ body{background:linear-gradient(135deg,#00bcd4,#0097a7);min-height:100vh;font-fa
 .card-title{font-size:15px;font-weight:700;color:#5a8a8a;margin-bottom:16px;display:flex;align-items:center;gap:6px}
 
 /* ── TOP ROW ── */
-.top-row{display:grid;grid-template-columns:120px 1fr;gap:18px}
+.top-row{display:grid;grid-template-columns:180px 1fr;gap:18px}
 @media(max-width:600px){.top-row{grid-template-columns:1fr}}
 
 /* ── MASCOT ── */
@@ -102,6 +102,17 @@ canvas{width:100%;height:170px;display:block}
 #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(120px);background:#1a3a3a;color:#fff;padding:10px 24px;border-radius:28px;font-weight:700;font-size:14px;box-shadow:0 6px 24px rgba(0,0,0,.2);transition:transform .35s cubic-bezier(.34,1.56,.64,1);z-index:999}
 #toast.show{transform:translateX(-50%) translateY(0)}
 .shake{animation:shk .4s ease}
+.date-row{display:flex;align-items:center;gap:4px}
+.date-row input{flex:1}
+.step-btn{background:#e0f7fa;border:1.5px solid #b2ebf2;border-radius:8px;
+  width:32px;height:42px;font-size:18px;font-weight:900;cursor:pointer;
+  color:#0097a7;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:background .15s;padding:0;line-height:1}
+.step-btn:hover{background:#b2ebf2}
+.today-btn{background:linear-gradient(135deg,#00bcd4,#0097a7);border:none;
+  border-radius:8px;padding:0 10px;height:42px;color:#fff;font-family:Heebo;
+  font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.today-btn:hover{opacity:.9}
 @keyframes shk{0%,100%{transform:translateX(0)}25%,75%{transform:translateX(-5px)}50%{transform:translateX(5px)}}
 </style>
 </head>
@@ -173,15 +184,20 @@ canvas{width:100%;height:170px;display:block}
     <div class="card">
       <div class="card-title">🚶 הוסף קילומטרים</div>
       <div class="inp-row">
-        <div class="ig" style="max-width:140px">
-          <label>תאריך (dd/mm/yyyy)</label>
-          <input type="text" id="km-date-disp" placeholder="05/04/2026" maxlength="10"
-            oninput="parseDateInput(this.value,'km-date-iso')">
+        <div class="ig">
+          <label>תאריך</label>
+          <div class="date-row">
+            <button class="step-btn" onclick="stepDate('km-date-disp','km-date-iso',-1)">−</button>
+            <input type="text" id="km-date-disp" placeholder="dd/mm/yyyy" maxlength="10"
+              oninput="parseDateInput(this.value,'km-date-iso')">
+            <button class="step-btn" onclick="stepDate('km-date-disp','km-date-iso',1)">+</button>
+            <button class="today-btn" onclick="setToday('km-date-disp','km-date-iso')">היום</button>
+          </div>
           <input type="hidden" id="km-date-iso">
         </div>
-        <div class="ig" style="max-width:110px">
-          <label>ק"מ שהלכתי</label>
-          <input type="number" id="km-val" placeholder="5.0" min="0.1" step="0.1">
+        <div class="ig" style="max-width:100px">
+          <label>ק"מ</label>
+          <input type="number" id="km-val" placeholder="" min="0.1" step="0.1">
         </div>
         <button class="add-btn" onclick="addKm()">+ הוסף</button>
       </div>
@@ -189,15 +205,20 @@ canvas{width:100%;height:170px;display:block}
     <div class="card">
       <div class="card-title">⚖️ עדכון משקל</div>
       <div class="inp-row">
-        <div class="ig" style="max-width:140px">
-          <label>תאריך (dd/mm/yyyy)</label>
-          <input type="text" id="w-date-disp" placeholder="05/04/2026" maxlength="10"
-            oninput="parseDateInput(this.value,'w-date-iso')">
+        <div class="ig">
+          <label>תאריך</label>
+          <div class="date-row">
+            <button class="step-btn" onclick="stepDate('w-date-disp','w-date-iso',-1)">−</button>
+            <input type="text" id="w-date-disp" placeholder="dd/mm/yyyy" maxlength="10"
+              oninput="parseDateInput(this.value,'w-date-iso')">
+            <button class="step-btn" onclick="stepDate('w-date-disp','w-date-iso',1)">+</button>
+            <button class="today-btn" onclick="setToday('w-date-disp','w-date-iso')">היום</button>
+          </div>
           <input type="hidden" id="w-date-iso">
         </div>
-        <div class="ig" style="max-width:110px">
+        <div class="ig" style="max-width:100px">
           <label>משקל (ק"ג)</label>
-          <input type="number" id="w-val" placeholder="85.0" min="20" step="0.1">
+          <input type="number" id="w-val" placeholder="" min="20" step="0.1">
         </div>
         <button class="add-btn" onclick="addWeight()">עדכן</button>
       </div>
@@ -302,6 +323,20 @@ function curMonth(){ return today().slice(0,7); }
 // ══════════════════════════════════════════
 // DATE INPUT PARSER
 // ══════════════════════════════════════════
+function stepDate(dispId, isoId, dir) {
+  // Get current ISO date or use today
+  let iso = document.getElementById(isoId).value;
+  if (!iso) iso = today();
+  const d = new Date(iso + 'T00:00:00');
+  d.setDate(d.getDate() + dir);
+  const newIso = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  setDateFields(newIso, dispId, isoId);
+}
+
+function setToday(dispId, isoId) {
+  setDateFields(today(), dispId, isoId);
+}
+
 function parseDateInput(val, hiddenId){
   const m=val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   document.getElementById(hiddenId).value = m ? m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0') : '';
@@ -337,6 +372,8 @@ function addKm(){
   data.km.sort((a,b)=>a.date.localeCompare(b.date));
   save();
   document.getElementById('km-val').value='';
+  document.getElementById('km-date-disp').value='';
+  document.getElementById('km-date-iso').value='';
   viewMonth=mKey(iso);
   render();
   toast('✅ נוספו '+km+' ק"מ ב-'+fmtDate(iso));
@@ -356,6 +393,8 @@ function addWeight(){
   data.w.sort((a,b)=>a.date.localeCompare(b.date));
   save(); render();
   document.getElementById('w-val').value='';
+  document.getElementById('w-date-disp').value='';
+  document.getElementById('w-date-iso').value='';
   toast('⚖️ משקל '+w+' ק"ג נשמר ל-'+fmtDate(iso));
 }
 
@@ -768,9 +807,11 @@ function shake(id){
 function init(){
   load();
   viewMonth=curMonth();
-  // Set today in date fields
-  setDateFields(today(),'km-date-disp','km-date-iso');
-  setDateFields(today(),'w-date-disp','w-date-iso');
+  // Leave date fields empty - user fills or presses + button
+  document.getElementById('km-date-disp').value = '';
+  document.getElementById('km-date-iso').value = '';
+  document.getElementById('w-date-disp').value = '';
+  document.getElementById('w-date-iso').value = '';
   render();
 }
 window.addEventListener('resize',()=>{
